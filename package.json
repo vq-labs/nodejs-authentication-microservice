@@ -1,0 +1,21 @@
+{
+  "name": "vq-auth",
+  "version": "0.0.0",
+  "description": "Token-based Authentification microservice",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "VQ LABS",
+  "license": "MIT",
+  "dependencies": {
+    "async": "~1.5.2",
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "~1.15.0",
+    "cors": "~2.7.1",
+    "express": "^4.15.2",
+    "mysql": "~2.10.2",
+    "rand-token": "~0.2.1",
+    "sequelize": "^3.30.4"
+  }
+}
