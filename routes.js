@@ -125,6 +125,19 @@ module.exports = app => {
     	});
 	});
 
+	/**
+	 * Gets VQ user by
+	 * @query email
+	 */
+	app.get('/auth/user', (req, res) => {
+		var appId = req.app ? req.app.id : false;
+
+		AuthService
+		.getUserIdFromEmail(appId, req.query.email, (err, vqUser) => {
+			return sendResponse(res, err, vqUser);	
+		});
+	});
+
 	app.post('/auth/local/signup', (req, res) => {
 		const appId = req.app ? req.app.id : false;
 		const email = req.body.email;

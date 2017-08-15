@@ -1,6 +1,6 @@
 {
   "name": "vq-auth",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "Token-based Authentification microservice",
   "main": "server.js",
   "scripts": {
