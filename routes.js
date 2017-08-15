@@ -128,14 +128,26 @@ module.exports = app => {
 	/**
 	 * Gets VQ user by
 	 * @query email
+	 * @query userId
 	 */
 	app.get('/auth/user', (req, res) => {
 		var appId = req.app ? req.app.id : false;
 
-		AuthService
-		.getUserIdFromEmail(appId, req.query.email, (err, vqUser) => {
-			return sendResponse(res, err, vqUser);	
-		});
+		if (req.query.email) {
+			return AuthService
+				.getUserIdFromEmail(appId, req.query.email, (err, vqUser) => {
+					return sendResponse(res, err, vqUser);	
+				});
+		}
+
+		if (req.query.userId) {
+			return AuthService
+				.getEmailsFromUserId(appId, req.query.userId, (err, vqUser) => {
+					return sendResponse(res, err, vqUser);	
+				});
+		}
+		
+		res.status(400).send('Provide email or userId');
 	});
 
 	app.post('/auth/local/signup', (req, res) => {

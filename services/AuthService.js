@@ -138,10 +138,12 @@ const checkToken = (appId, token, callback) => {
 const checkPassword = (appId, userId, password, callback) => {
 	models.userPassword
 		.findOne({
-			where: [
-				{ userId },
-				{ appId }
-			]
+			where: {
+				$and: [
+					{ userId },
+					{ appId }
+				]
+			}
 		})
 		.then(instance => {
 			var isCorrect = false;
@@ -154,15 +156,36 @@ const checkPassword = (appId, userId, password, callback) => {
 		}, err => callback(err))
 };
 
+const getEmailsFromUserId = (appId, userId, callback) => {
+	return models.userEmail
+		.findAll({
+			where: {
+				$and: [
+					{ appId },
+					{ userId }
+				]	
+			}
+		})
+		.then(instances =>
+			callback(null, instances || false),
+			err => callback(err)
+		)
+};
+
 const getUserIdFromEmail = (appId, email, callback) => {
 	return models.userEmail
 		.findOne({
-			where: [
-				{ appId },
-				{ email }
-			]
+			where: {
+				$and: [
+					{ appId },
+					{ email }
+				]
+			}
 		})
-		.then(instance => callback(null, instance || false), err => callback(err))
+		.then(
+			instance => callback(null, instance || false),
+			err => callback(err)
+		)
 };
 
 var addUserProp = function(userId, propKey, propValue, callback) {
@@ -173,11 +196,14 @@ var addUserProp = function(userId, propKey, propValue, callback) {
 		});
 	}
 
-	models.userProp.findOne({
-		where: [
-			{ userId },
-			{ propKey }
-		]
+	models.userProp
+	.findOne({
+		where: {
+			$and: [
+				{ userId },
+				{ propKey }
+			]
+		}
 	})
 	.then((err, result) => {
 		if (err) {
@@ -225,6 +251,7 @@ module.exports = {
 	checkPassword: checkPassword,
 	checkToken: checkToken,
 	getUserIdFromEmail: getUserIdFromEmail,
+	getEmailsFromUserId,
 	getUserIdFromNetwork: getUserIdFromNetwork,
 	updateNetworkToken: updateNetworkToken,
 	generateHashSync: generateHashSync,
