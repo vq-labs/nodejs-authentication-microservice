@@ -25,6 +25,25 @@ This API Endpoint is intended for validation of user's token. The token needs to
 **Code:** 200 <br />
 **Content:** `{ appId: 1, userId: 1, token: 'blablabla-some-token' }`
 
+### POST /auth/password/request-reset
+Returns code with with one can restart user password.
+
+* **Data params:**<br />
+'x-viciauth-api-key' and 'x-viciauth-app-key' headers required.
+```
+    {
+        email: 'test@vq-labs.com',
+    }
+```
+
+* **Success Response:**<br />
+**Code:** 200 <br />
+**Content:** `{ appId: 1, userId: 2, code: 'asdiu123nunoaHUi2' }`
+
+* **Error Response:**<br />
+**Code:** 400 <br />
+**Content:** `{ code: 'EMAIL_NOT_FOUND' }`
+
 ### POST /auth/local/login
 Allows authentification with password (local strategy).
 

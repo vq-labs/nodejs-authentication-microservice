@@ -1,3 +1,4 @@
+const async = require("async");
 const AuthController = require("./controllers/AuthCtrl.js");
 const NetworkController = require("./controllers/NetworkCtrl.js");
 const SignupController = require("./controllers/SignupCtrl.js");
@@ -6,6 +7,8 @@ const AuthService = require("./services/AuthService.js");
 const identifyApp = require("./middleware/IdentifyApp.js");
 const identifyAppUser = require("./middleware/IdentifyAppUser.js");
 const models = require("./models");
+
+const randomToken = require('random-token');
 
 const sendResponse = (res, err, data) => {
 	if (err) {
@@ -18,7 +21,9 @@ const sendResponse = (res, err, data) => {
 		}
 
 		if (typeof err === 'string') {
-			return res.status(400).send(err);
+			return res.status(400).send({
+				code: err
+			});
 		}
 
 		return res.status(500).send(err);
@@ -113,6 +118,107 @@ module.exports = app => {
 		});
 	});
 
+	app.post('/auth/password/request-reset',
+		identifyApp,
+		(req, res, next) => {
+			var appId = req.app ? req.app.id : false;
+			var email = req.body.email;
+			var userEmail, userId;
+
+			async.waterfall([
+				cb => models
+					.userEmail
+					.findOne({
+						where: {
+							$and: [
+								{ email },
+								{ appId }
+							]
+						}
+					})
+					.then(rUserEmail => {
+						if (!rUserEmail) {
+							return setTimeout(() => {
+								return cb('EMAIL_NOT_FOUND')
+							}, 100);
+						}
+
+						userEmail = rUserEmail;
+						userId = userEmail.userId;
+
+						return cb();
+					}, cb),
+				cb => models.userResetCode
+					.create({
+						appId,
+						userId: userEmail.userId,
+						code: randomToken(64)
+					})
+					.then(rCode => {
+						cb(null, rCode);
+					}, cb)
+			], (err, resetCode) => sendResponse(res, err, resetCode));
+		});
+
+		app.post('/auth/password/reset',
+		identifyApp,
+		(req, res, next) => {
+			const appId = req.app ? req.app.id : false;
+			const code = req.body.code;
+			const newPassword = req.body.password;
+
+			async.waterfall([
+				cb => models
+					.userResetCode
+					.findOne({
+						where: {
+							$and: [
+								{ code },
+								{ appId }
+							]
+						}
+					})
+					.then(rUserResetCode => {
+						if (!rUserResetCode) {
+							return setTimeout(() =>
+								cb('WRONG_RESET_CODE'),
+								500
+							);
+						}
+
+						userId = rUserResetCode.userId;
+
+						return cb();
+					}, cb),
+				cb => {
+					return models.userResetCode
+					.destroy({
+						where: {
+							$and: [
+								{ appId },
+								{ userId }
+							]
+						}
+					})
+					.then(_ => cb(), cb)
+				},
+				cb => {
+					return models.userResetCode
+					.destroy({
+						where: {
+							$and: [
+								{ appId },
+								{ userId }
+							]
+						}
+					})
+					.then(_ => cb(), cb)
+				},
+				cb => AuthService
+					.createNewPassword(appId, userId, newPassword, cb)
+			], err => sendResponse(res, err, { status: 200 }));
+		});
+
 	app.post('/auth/networks/facebook', (req, res) => {
 		var appId = req.app ? req.app.id : false;
 		var token = req.body.token;
@@ -121,7 +227,7 @@ module.exports = app => {
 
 		NetworkController
 		.connectToFacebook(appId, token, refreshToken, Profile, (err, rUser) => {
-			return sendResponse(res,err,rUser);
+			return sendResponse(res, err, rUser);
     	});
 	});
 
@@ -155,7 +261,8 @@ module.exports = app => {
 		const email = req.body.email;
 		const password = req.body.password;
 
-		SignupController.createLocalAccount(appId, email, password, (err, rUser) => {
+		SignupController
+		.createLocalAccount(appId, email, password, (err, rUser) => {
 			return sendResponse(res,err,rUser);
 		});
 	});

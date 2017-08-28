@@ -7,4 +7,6 @@ models.app.create({
 }, {})
 .then(data => {
     console.log(data.dataValues);
+
+    process.exit();
 });

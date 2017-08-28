@@ -22,14 +22,30 @@ const createNewUser = (appId, callback) => {
 		.then(instance => callback(null, instance), err => callback(err));
 };
 
-const createNewPassword = (appId, userId, password, callback) => {
+const createNewPassword = (appId, userId, password, cb) => {
+	cb = cb || function() {};
+
+	if (!appId || !userId || !password) {
+		return cb('INIT_PARAMS');
+	}
+
 	models.userPassword
-		.create({ 
-			appId: appId, 
-			userId: userId, 
-			password: generateHashSync(password)
-		})
-		.then(instance => callback(), err => callback(err));
+	.destroy({
+		where: {
+			$and: [
+				{ appId },
+				{ userId }
+			]
+		},
+		password: generateHashSync(password)
+	})
+	.then(_ => models.userPassword.create({ 
+		appId: appId, 
+		userId: userId, 
+		password: generateHashSync(password)
+	}))
+	.then(_ => cb())
+	.catch(cb);
 };
 
 const createNewEmail = (appId, userId, email, callback) => async.series([
@@ -188,7 +204,7 @@ const getUserIdFromEmail = (appId, email, callback) => {
 		)
 };
 
-var addUserProp = function(userId, propKey, propValue, callback) {
+const addUserProp = (userId, propKey, propValue, callback) => {
 	if (!userId || !propKey) {
 		return callback({
 			status: 400,
@@ -242,18 +258,18 @@ var addUserProp = function(userId, propKey, propValue, callback) {
 };
 
 module.exports = {
-	createNewUser: createNewUser,
-	createNewPassword: createNewPassword,
-	createNewEmail: createNewEmail,
-	createNewToken: createNewToken,
-	createNewNetwork: createNewNetwork,
-	addUserProp: addUserProp,
-	checkPassword: checkPassword,
-	checkToken: checkToken,
-	getUserIdFromEmail: getUserIdFromEmail,
+	createNewUser,
+	createNewPassword,
+	createNewEmail,
+	createNewToken,
+	createNewNetwork,
+	addUserProp,
+	checkPassword,
+	checkToken,
+	getUserIdFromEmail,
 	getEmailsFromUserId,
-	getUserIdFromNetwork: getUserIdFromNetwork,
-	updateNetworkToken: updateNetworkToken,
-	generateHashSync: generateHashSync,
-	validPasswordSync: validPasswordSync,
+	getUserIdFromNetwork,
+	updateNetworkToken,
+	generateHashSync,
+	validPasswordSync
 };

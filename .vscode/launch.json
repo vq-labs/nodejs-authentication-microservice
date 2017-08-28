@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "debug:local",
-            "program": "${workspaceRoot}/index.js",
+            "program": "${workspaceRoot}/server.js",
             "env": {
                 "VA_ENV": "local"
             }
